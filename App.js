@@ -1,24 +1,41 @@
-import { StatusBar } from 'expo-status-bar';
-import React, { Component } from 'react';
-import { SafeAreaView, StyleSheet, Text, View, Button, ScrollView, TextInput, FlatList, TouchableOpacity } from 'react-native';
+import React, {Component, useState} from 'react';
+import {
+  StyleSheet,
+  Alert,
+  View,
+  Text,
+  Button,
+  ScrollView,
+  TextInput,
+  SafeAreaView
+} from 'react-native';
 import CheckBox from 'react-native-check-box';
 
-export default class App extends Component {
+const ToDoItem = () => {
+  const [doneState, setDone] = useState(false);
+  const onCheck = () => {
+    setDone(!doneState);
+  };
+  return (
+    <View>
+      <CheckBox
+        checkBoxColor="skyblue"
+        onClick={onCheck}
+        isChecked={doneState}
+        disabled={doneState}
+      />
+      <Text style={[styles.todoText, {opacity: doneState ? 0.2 : 1}]}>
+        A random To-Do item
+      </Text>
+    </View>
+  );
+};
 
+export default class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      items: [
-        {
-          'key': 'Hello World!'
-        }, 
-        {
-          'key': 'Dev is awesome!'
-        }, 
-        {
-          'key': '😊'
-        }
-      ],
+      items: [],
       presentToDo: '',
     };
 
@@ -41,16 +58,15 @@ export default class App extends Component {
 
   render() {
     return (
-      <>
-      <StatusBar barStyle={"light-content"} backgroundColor={"#212121"}/>
       <SafeAreaView style={{flex: 1}}>
-      <ScrollView>
-        <FlatList
-          data={this.state.items}
-          renderItem={({item}) => <Text style={styles.todoItem}>{item.key}</Text>}
-        />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainerStyle}>
+        <View>
+          <ToDoItem></ToDoItem>
+        </View>
         <TextInput
-          placeholder="Add new todo"
+          placeholder="Add new Todo"
           value={this.state.presentToDo}
           style={styles.textInput}
           onChangeText={e => {
@@ -61,36 +77,26 @@ export default class App extends Component {
           onSubmitEditing = {this.addItem}
         />
         <Button
-          title="Add new todo"
+          title="Add new To do item"
           onPress={this.addItem}
           color="lightgreen"
         />
-        <TouchableOpacity onPress={this.clearItems}
-            style={styles.roundButton1} />
+        <View style={{marginTop: 20}}>
+          <Button title="Clear todos" onPress={this.clearItems} color="red" />
+        </View>
       </ScrollView>
       </SafeAreaView>
-      </>
     );
   }
+
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#afafaf',
-    width: '80%',
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginVertical: 20,
-    fontSize: 20,
-  },
   todoItem: {
-    padding: 10,
-    fontSize: 18,
-    height: 44,
+    flexDirection: 'row',
+    marginVertical: 10,
+    alignItems: 'center',
+
   },
   todoText: {
     borderColor: '#afafaf',
@@ -101,14 +107,5 @@ const styles = StyleSheet.create({
     marginRight: 10,
     minWidth: "50%",
     textAlign: "center"
-  },
-  roundButton1: {
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 10,
-    borderRadius: 100,
-    backgroundColor: 'red',
   },
 });
