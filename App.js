@@ -10,11 +10,18 @@ import {
   SafeAreaView
 } from 'react-native';
 import CheckBox from 'react-native-check-box';
+import {db} from './src/config';
 
-const ToDoItem = () => {
-  const [doneState, setDone] = useState(false);
+const ToDoItem = ({todoItem: {todoItem: name, done}, id}) => {
+  const [doneState, setDone] = useState(done);
   const onCheck = () => {
     setDone(!doneState);
+    db.ref('/todos').update({
+      [id]: {
+        todoItem: name,
+        done: !doneState,
+      },
+    });
   };
   return (
     <View>
@@ -25,7 +32,7 @@ const ToDoItem = () => {
         disabled={doneState}
       />
       <Text style={[styles.todoText, {opacity: doneState ? 0.2 : 1}]}>
-        A random To-Do item
+        {name}
       </Text>
     </View>
   );
@@ -35,7 +42,7 @@ export default class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      items: [],
+      items: {},
       presentToDo: '',
     };
 
@@ -44,29 +51,51 @@ export default class App extends Component {
   }
 
   componentDidMount() {
-
+    db.ref('/todos').on('value', querySnapShot => {
+      let data = querySnapShot.val() ? querySnapShot.val() : {};
+      let todoItems = {...data};
+      this.setState({
+        items: todoItems,
+      });
+    });
   }
 
   addItem() {
-    this.setState({items: [...this.state.items, {'key': this.state.presentToDo}]});
+    db.ref('/todos').push({
+      done: false,
+      todoItem: this.state.presentToDo,
+    });
+    Alert.alert('Action!', 'A new To-do item was created');
+
     this.setState({presentToDo: ''});
   }
 
   clearItems() {
-    this.setState({items: []});
+    db.ref('/todos').remove();
   }
 
   render() {
+    let todosKeys = Object.keys(this.state.items);
     return (
       <SafeAreaView style={{flex: 1}}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainerStyle}>
         <View>
-          <ToDoItem></ToDoItem>
+          {todosKeys.length > 0 ? (
+            todosKeys.map(key => (
+              <ToDoItem
+                key={key}
+                id={key}
+                todoItem={this.state.items[key]}
+              />
+            ))
+          ) : (
+                <Text>No items</Text>
+          )}
         </View>
         <TextInput
-          placeholder="Add new Todo"
+          placeholder="Add new todo"
           value={this.state.presentToDo}
           style={styles.textInput}
           onChangeText={e => {
@@ -77,7 +106,7 @@ export default class App extends Component {
           onSubmitEditing = {this.addItem}
         />
         <Button
-          title="Add new To do item"
+          title="Add new todo item"
           onPress={this.addItem}
           color="lightgreen"
         />
